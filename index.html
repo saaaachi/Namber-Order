@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Number Order - 第31弾</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #e8f5e9; font-family: sans-serif; touch-action: none; }
+        #ad-top, #ad-bottom { position: fixed; left: 0; width: 100%; height: 150px; background: #333; z-index: 100; display: flex; align-items: center; justify-content: center; }
+        #ad-top { top: 0; } #ad-bottom { bottom: 0; }
+        iframe { border: none; width: 100%; height: 150px; }
+        #game-area { margin-top: 150px; height: calc(100vh - 300px); position: relative; }
+        .num-circle { 
+            position: absolute; width: 60px; height: 60px; background: #4caf50; color: white; 
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+            font-size: 24px; font-weight: bold; cursor: pointer; box-shadow: 0 4px #2e7d32;
+        }
+        #ui { position: absolute; top: 160px; width: 100%; text-align: center; font-size: 24px; font-weight: bold; color: #2e7d32; }
+        #end-menu { 
+            position: absolute; top: 150px; width: 100%; height: calc(100vh - 300px); 
+            background: rgba(255,255,255,0.95); display: none; flex-direction: column; 
+            align-items: center; justify-content: center; z-index: 60; 
+        }
+        .menu-btn { width: 220px; padding: 15px; margin: 10px; font-size: 20px; border: none; border-radius: 30px; font-weight: bold; cursor: pointer; text-decoration: none; text-align: center; }
+        #retry-btn { background: #4caf50; color: white; }
+        #more-games-btn { background: #ff4081; color: white; }
+    </style>
+</head>
+<body>
+    <div id="ad-top"><iframe src="ad.html"></iframe></div>
+    <div id="ad-bottom"><iframe src="ad.html"></iframe></div>
+    
+    <div id="end-menu">
+        <h2 id="result-msg" style="color:#2e7d32;">数字を順番に叩け！</h2>
+        <button id="retry-btn" class="menu-btn" onclick="startNewGame()">スタート！</button>
+        <a href="https://saaaachi.github.io/Flash-Math/" id="more-games-btn" class="menu-btn">他のゲームはこちら</a>
+    </div>
+
+    <div id="ui">NEXT: 1</div>
+    <div id="game-area" id="stage"></div>
+
+    <script>
+        let score = 0, nextNum = 1, gameActive = false, timer;
+        const area = document.getElementById("game-area");
+
+        function startNewGame() {
+            document.getElementById("end-menu").style.display = "none";
+            score = 0; nextNum = 1; gameActive = true;
+            document.getElementById("ui").innerText = "NEXT: 1";
+            spawnNumbers();
+        }
+
+        function spawnNumbers() {
+            area.innerHTML = "";
+            let count = Math.min(5 + Math.floor(score/3), 12); // スコアに応じて数が増える
+            for(let i=0; i<count; i++) {
+                const n = document.createElement("div");
+                n.className = "num-circle";
+                n.innerText = i + 1;
+                n.style.left = Math.random() * (window.innerWidth - 70) + "px";
+                n.style.top = Math.random() * (window.innerHeight - 370) + "px";
+                n.onclick = () => tapNum(i + 1, n);
+                area.appendChild(n);
+            }
+            clearTimeout(timer);
+            // 制限時間（数が多いほど少し伸びる）
+            timer = setTimeout(() => { gameOver("時間切れ！⏳"); }, 4000 + (count * 200));
+        }
+
+        function tapNum(num, el) {
+            if(!gameActive) return;
+            if(num === nextNum) {
+                el.style.visibility = "hidden";
+                nextNum++;
+                let total = area.querySelectorAll('.num-circle').length;
+                if(nextNum > total) {
+                    score++;
+                    nextNum = 1;
+                    document.getElementById("ui").innerText = "NEXT: 1";
+                    spawnNumbers();
+                } else {
+                    document.getElementById("ui").innerText = "NEXT: " + nextNum;
+                }
+            } else {
+                gameOver("順番がちがうよ！❌");
+            }
+        }
+
+        function gameOver(msg) {
+            gameActive = false;
+            clearTimeout(timer);
+            document.getElementById("result-msg").innerText = msg + "\nSCORE: " + score;
+            document.getElementById("end-menu").style.display = "flex";
+        }
+
+        window.onload = () => { document.getElementById("end-menu").style.display = "flex"; };
+        setInterval(() => { const fs = document.querySelectorAll('iframe'); fs.forEach(f => { const s = f.src; f.src = "about:blank"; setTimeout(() => f.src = s, 100); }); }, 30000);
+    </script>
+</body>
+</html>
